@@ -572,6 +572,7 @@ test("maps rate_limited from the API without an immediate retry control", async 
 });
 
 const REMOVED_PHONE_NOTICE_FRAGMENT = "Folosim numărul tău doar ca să te sunăm";
+const REMOVED_OPT_IN_SENTENCE = "Dacă bifezi abonarea, primești newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email.";
 
 const walkHtmlFiles = (dir, acc = []) => {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -595,9 +596,33 @@ test("no HTML page contains the removed phone-form notice", () => {
   }
 });
 
+test("no HTML page contains the removed contact opt-in sentence", () => {
+  const root = path.join(__dirname, "..");
+  const allPages = walkHtmlFiles(root);
+  for (const file of allPages) {
+    const html = fs.readFileSync(file, "utf8");
+    assert.ok(
+      !html.includes(REMOVED_OPT_IN_SENTENCE),
+      `${path.relative(root, file)} still contains the removed opt-in sentence`
+    );
+  }
+});
+
+test("footer has no #parteneri scroll link while parteneri-heading section still exists", () => {
+  const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
+  assert.ok(
+    !html.includes('href="#parteneri"'),
+    "index.html footer still contains a #parteneri scroll link"
+  );
+  assert.ok(
+    html.includes('id="parteneri-heading"'),
+    "index.html is missing the parteneri-heading section"
+  );
+});
+
 test("contact and newsletter forms carry their privacy notice above submit", () => {
   const contactNote = "Folosim datele tale ca să-ți răspundem la mesaj.";
-  const contactOptIn = "Dacă bifezi abonarea, primești newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email.";
+  const contactOptInLabel = "Abonare la newsletter LegalTech.";
   const visitLink = "Brevo poate lega vizitele";
   const newsletterNoteBlog =
     "Te abonezi la newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email. Dacă ai acceptat cookie-urile de Marketing, Brevo poate lega vizitele tale pe website de adresa ta.";
@@ -619,7 +644,8 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
     assert.ok(form.includes(contactNote), rel);
     assert.equal(note.includes(visitLink), false, rel);
     assert.equal(optIn.includes(visitLink), false, rel);
-    assert.ok(optIn.includes(contactOptIn), rel);
+    assert.ok(optIn.includes(contactOptInLabel), `${rel}: opt-in label missing "Abonare la newsletter LegalTech."`);
+    assert.equal(optIn.includes(REMOVED_OPT_IN_SENTENCE), false, `${rel}: removed opt-in sentence still present in label`);
     assert.ok(form.indexOf("solon-form-note") < form.indexOf('type="submit"'), rel);
   }
   for (const { rel, note } of newsletterPages) {
