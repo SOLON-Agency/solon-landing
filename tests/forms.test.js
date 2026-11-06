@@ -622,7 +622,7 @@ test("footer has no #parteneri scroll link while parteneri-heading section still
 
 test("contact and newsletter forms carry their privacy notice above submit", () => {
   const contactNote = "Folosim datele tale ca să-ți răspundem la mesaj.";
-  const contactOptInLabel = "Abonare la newsletter LegalTech.";
+  const contactOptInLabel = "Abonare la newsletter LegalTech. Te poți dezabona oricând.";
   const visitLink = "Brevo poate lega vizitele";
   const newsletterNoteBlog =
     "Te abonezi la newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email. Dacă ai acceptat cookie-urile de Marketing, Brevo poate lega vizitele tale pe website de adresa ta.";
@@ -644,8 +644,11 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
     assert.ok(form.includes(contactNote), rel);
     assert.equal(note.includes(visitLink), false, rel);
     assert.equal(optIn.includes(visitLink), false, rel);
-    assert.ok(optIn.includes(contactOptInLabel), `${rel}: opt-in label missing "Abonare la newsletter LegalTech."`);
+    assert.ok(optIn.includes(contactOptInLabel), `${rel}: opt-in label missing exact text "Abonare la newsletter LegalTech. Te poți dezabona oricând."`);
     assert.equal(optIn.includes(REMOVED_OPT_IN_SENTENCE), false, `${rel}: removed opt-in sentence still present in label`);
+    assert.equal(optIn.includes("Brevo"), false, `${rel}: opt-in label must not mention Brevo`);
+    assert.equal(/\bchecked\b/.test(optIn), false, `${rel}: contact opt-in checkbox must not be pre-checked`);
+    assert.equal(/\brequired\b/.test(optIn), false, `${rel}: contact opt-in checkbox must not be required`);
     assert.ok(form.indexOf("solon-form-note") < form.indexOf('type="submit"'), rel);
   }
   for (const { rel, note } of newsletterPages) {
