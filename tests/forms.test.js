@@ -573,6 +573,7 @@ test("maps rate_limited from the API without an immediate retry control", async 
 
 const REMOVED_PHONE_NOTICE_FRAGMENT = "Folosim numărul tău doar ca să te sunăm";
 const REMOVED_OPT_IN_SENTENCE = "Dacă bifezi abonarea, primești newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email.";
+const REMOVED_NEWSLETTER_NOTE_SENTENCE = "Te abonezi la newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email.";
 
 const walkHtmlFiles = (dir, acc = []) => {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -608,6 +609,18 @@ test("no HTML page contains the removed contact opt-in sentence", () => {
   }
 });
 
+test("no HTML page contains the removed newsletter note sentence", () => {
+  const root = path.join(__dirname, "..");
+  const allPages = walkHtmlFiles(root);
+  for (const file of allPages) {
+    const html = fs.readFileSync(file, "utf8");
+    assert.ok(
+      !html.includes(REMOVED_NEWSLETTER_NOTE_SENTENCE),
+      `${path.relative(root, file)} still contains the removed newsletter note sentence`
+    );
+  }
+});
+
 test("footer has no #parteneri scroll link while parteneri-heading section still exists", () => {
   const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
   assert.ok(
@@ -624,10 +637,9 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
   const contactNote = "Folosim datele tale ca să-ți răspundem la mesaj.";
   const contactOptInLabel = "Abonare la newsletter LegalTech. Te poți dezabona oricând.";
   const visitLink = "Brevo poate lega vizitele";
-  const newsletterNoteBlog =
-    "Te abonezi la newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email. Dacă ai acceptat cookie-urile de Marketing, Brevo poate lega vizitele tale pe website de adresa ta.";
-  const newsletterNoteStandalone =
-    "Te abonezi la newsletterul SOLON, trimis prin Brevo. Te poți dezabona oricând, din linkul din fiecare email. Dacă ai acceptat cookie-urile de Marketing, Brevo poate lega vizitele tale pe website de adresa ta.";
+  const newsletterNote = "Te abonezi la newsletterul SOLON. Te poți dezabona oricând.";
+  const newsletterNoteBlog = newsletterNote;
+  const newsletterNoteStandalone = newsletterNote;
   const contactPages = ["index.html", "studii-de-caz/index.html"];
   const newsletterPages = [
     { rel: "templates/layout.html", note: newsletterNoteBlog },
@@ -644,7 +656,9 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
     assert.ok(form.includes(contactNote), rel);
     assert.equal(note.includes(visitLink), false, rel);
     assert.equal(optIn.includes(visitLink), false, rel);
-    assert.ok(optIn.includes(contactOptInLabel), `${rel}: opt-in label missing exact text "Abonare la newsletter LegalTech. Te poți dezabona oricând."`);
+    const inputEnd = optIn.indexOf(">", optIn.indexOf("<input")) + 1;
+    const labelText = optIn.slice(inputEnd).trim();
+    assert.equal(labelText, contactOptInLabel, `${rel}: opt-in label text mismatch`);
     assert.equal(optIn.includes(REMOVED_OPT_IN_SENTENCE), false, `${rel}: removed opt-in sentence still present in label`);
     assert.equal(optIn.includes("Brevo"), false, `${rel}: opt-in label must not mention Brevo`);
     assert.equal(/\bchecked\b/.test(optIn), false, `${rel}: contact opt-in checkbox must not be pre-checked`);
@@ -655,7 +669,9 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
     const html = fs.readFileSync(path.join(__dirname, "..", rel), "utf8");
     const start = html.indexOf('data-solon-form="Newsletter"');
     const form = html.slice(start, html.indexOf("</form>", start));
-    assert.ok(form.includes(note), rel);
+    const pStart = form.indexOf('class="solon-form-note"');
+    const pInner = form.slice(form.indexOf(">", pStart) + 1, form.indexOf("</p>", pStart)).trim();
+    assert.ok(pInner.startsWith(note), `${rel}: newsletter note does not start with "${note}"`);
     assert.ok(form.indexOf("solon-form-note") < form.indexOf('type="submit"'), rel);
   }
 });
