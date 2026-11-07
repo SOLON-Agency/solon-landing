@@ -663,6 +663,9 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
     assert.equal(optIn.includes("Brevo"), false, `${rel}: opt-in label must not mention Brevo`);
     assert.equal(/\bchecked\b/.test(optIn), false, `${rel}: contact opt-in checkbox must not be pre-checked`);
     assert.equal(/\brequired\b/.test(optIn), false, `${rel}: contact opt-in checkbox must not be required`);
+    assert.ok(optIn.includes('id="contact-newsletter-opt-in"'), `${rel}: opt-in checkbox missing id="contact-newsletter-opt-in"`);
+    assert.ok(optIn.includes('type="checkbox"'), `${rel}: opt-in input must be type="checkbox"`);
+    assert.ok(form.includes('<label class="solon-opt-in"'), `${rel}: opt-in checkbox not wrapped in an associated label`);
     assert.ok(form.indexOf("solon-form-note") < form.indexOf('type="submit"'), rel);
   }
   for (const { rel, note } of newsletterPages) {
@@ -672,6 +675,8 @@ test("contact and newsletter forms carry their privacy notice above submit", () 
     const pStart = form.indexOf('class="solon-form-note"');
     const pInner = form.slice(form.indexOf(">", pStart) + 1, form.indexOf("</p>", pStart)).trim();
     assert.ok(pInner.startsWith(note), `${rel}: newsletter note does not start with "${note}"`);
+    assert.ok(pInner.includes("Dacă ai acceptat cookie-urile de Marketing, Brevo poate lega vizitele tale pe website de adresa ta."), `${rel}: newsletter note missing cookie disclosure sentence`);
+    assert.ok(pInner.includes("/privacy/"), `${rel}: newsletter note missing /privacy/ link`);
     assert.ok(form.indexOf("solon-form-note") < form.indexOf('type="submit"'), rel);
   }
 });
