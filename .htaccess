@@ -236,6 +236,15 @@
   Header unset Server
   Header always unset Server
 </IfModule>
+
+# Cross-origin access for the public SOLON logo only. Other assets keep
+# the default policy. Do not widen this to the rest of the website.
+<Files "solon-logo.png">
+  <IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cross-Origin-Resource-Policy "cross-origin"
+  </IfModule>
+</Files>
 # END issue #29
 
 # BEGIN issue #30: caching

@@ -17,6 +17,17 @@ Do not scatter extra `Header` directives in nested `.htaccess` files.
 | `Content-Security-Policy-Report-Only` | Full allowlist + `report-uri` / `report-to` | Phase 1. Does not block. Collector URL is a **placeholder** until George provides one. |
 | `Report-To` / `Reporting-Endpoints` | Placeholder `csp-endpoint` | Same placeholder URL. |
 
+## Public logo CORS
+
+`/assets/img/solon-logo.png` only, inside the issue #29 block, scoped with `<Files "solon-logo.png">`:
+
+| Header | Value |
+| --- | --- |
+| `Access-Control-Allow-Origin` | `*` |
+| `Cross-Origin-Resource-Policy` | `cross-origin` |
+
+These headers are not set for any other file. Do not widen the `<Files>` match to the rest of the website.
+
 ## CSP reporting placeholder
 
 The Report-Only policy includes `report-uri` and `report-to csp-endpoint`, plus `Report-To` and `Reporting-Endpoints` headers. The URL is `https://REPLACE_WITH_CSP_REPORT_COLLECTOR.invalid/` (RFC 2606 `.invalid`, so browsers will not deliver reports yet).
