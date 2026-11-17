@@ -163,6 +163,23 @@ test("error-log.js exposes SolonLog and forms.js keeps Turnstile + timing", () =
   assert.match(forms, /prea multe cereri/);
 });
 
+test(".htaccess scopes CORS headers to solon-logo.png only", () => {
+  const htaccess = fs.readFileSync(path.join(root, ".htaccess"), "utf8");
+  const begin = htaccess.indexOf("# BEGIN issue #29: security headers");
+  const end = htaccess.indexOf("# END issue #29");
+  assert.ok(begin >= 0 && end > begin, "issue #29 block markers missing");
+  const block = htaccess.slice(begin, end);
+  assert.match(block, /<Files "solon-logo\.png">/);
+  assert.match(block, /Header always set Access-Control-Allow-Origin "\*"/);
+  assert.match(block, /Header always set Cross-Origin-Resource-Policy "cross-origin"/);
+  const withoutLogoFiles = htaccess.replace(
+    /<Files "solon-logo\.png">[\s\S]*?<\/Files>/,
+    ""
+  );
+  assert.doesNotMatch(withoutLogoFiles, /Access-Control-Allow-Origin/);
+  assert.doesNotMatch(withoutLogoFiles, /Cross-Origin-Resource-Policy/);
+});
+
 test(".htaccess CSP allows Turnstile and consent-gated tracker hosts", () => {
   const htaccess = fs.readFileSync(path.join(root, ".htaccess"), "utf8");
   assert.match(htaccess, /# BEGIN issue #29: security headers/);
